@@ -7,7 +7,6 @@ import { weatherWorkflow } from './workflows/weather-workflow';
 import { weatherAgent } from './agents/weather-agent';
 import { financialAgent } from './agents/financial-agent';
 import { financialRubeAgent } from './agents/financial-rube-agent';
-import { financialRubeDynamicAgent } from './agents/financial-rube-dynamic';
 
 // Minimal boot diagnostics (no secrets):
 console.log('[Boot] Mastra index init');
@@ -21,7 +20,6 @@ export const mastra = new Mastra({
     weatherAgent,           // Basic weather agent
     financialAgent,         // Financial agent with memory (no Rube)
     financialRubeAgent,     // Financial agent with Rube (static tools via top-level await)
-    financialRubeDynamicAgent  // Financial agent for dynamic Rube toolsets
   },
   storage: new LibSQLStore({
     url: ":memory:",
