@@ -1,7 +1,8 @@
 import { Agent } from "@mastra/core/agent";
 import { openai } from "@ai-sdk/openai";
 import { Memory } from "@mastra/memory";
-import { PostgresStore } from "@mastra/pg";
+import { TokenLimiter, ToolCallFilter } from "@mastra/memory/processors";
+import { PostgresStore, PgVector } from "@mastra/pg";
 import { getTransactionsTool } from "../tools/get-transactions-tool";
 
 export const financialAgent = new Agent({
@@ -39,8 +40,34 @@ TOOLS
   model: openai("gpt-4o-mini"), // You can use "gpt-3.5-turbo" if you prefer
   tools: { getTransactionsTool }, // Add our tool here
   memory: new Memory({
+    processors: [
+      new ToolCallFilter(),
+      new TokenLimiter(12000), // final guardrail
+    ],
+    options: {
+      workingMemory: {
+        enabled: true,
+        scope: 'resource',
+        template: `# Financial Profile\n\n## Personal Info\n- Name:\n- Location:\n- Timezone:\n\n## Financial Goals\n- Monthly Budget:\n- Savings Target:\n- Key Financial Goals:\n  - [Goal 1]:\n  - [Goal 2]:\n\n## Spending Insights\n- Top Categories:\n- Regular Vendors:\n- Unusual Patterns:\n- Average Monthly Spend:\n\n## Alerts & Concerns\n- Budget Warnings:\n- Recurring Subscriptions:\n- Financial Questions:`,
+      },
+      semanticRecall: {
+        topK: 6,
+        messageRange: 3,
+        scope: 'resource',
+      },
+      threads: {
+        generateTitle: {
+          model: openai('gpt-4o-mini'),
+          instructions: 'Generate a concise (max 6 words) finance-focused title summarizing the user\'s first message. Do not include quotes or punctuation at the end.',
+        },
+      },
+    },
     storage: new PostgresStore({
       connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/mastra_memory',
     }),
+    vector: new PgVector({
+      connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/mastra_memory',
+    }),
+    embedder: openai.embedding('text-embedding-3-small'),
   }),
 });
