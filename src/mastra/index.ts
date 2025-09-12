@@ -1,3 +1,4 @@
+import 'dotenv/config';
 
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
@@ -6,12 +7,23 @@ import { weatherWorkflow } from './workflows/weather-workflow';
 import { weatherAgent } from './agents/weather-agent';
 import { financialAgent } from './agents/financial-agent';
 import { financialRubeAgent } from './agents/financial-rube-agent';
+import { financialRubeDynamicAgent } from './agents/financial-rube-dynamic';
+
+// Minimal boot diagnostics (no secrets):
+console.log('[Boot] Mastra index init');
+console.log('[Boot] .env loaded? OPENAI key present:', Boolean(process.env.OPENAI_API_KEY));
+console.log('[Boot] DATABASE_URL present?', Boolean(process.env.DATABASE_URL));
+console.log('[Boot] RUBE_MCP_URL present?', Boolean(process.env.RUBE_MCP_URL));
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
-  agents: { weatherAgent, financialAgent, financialRubeAgent },
+  agents: { 
+    weatherAgent,           // Basic weather agent
+    financialAgent,         // Financial agent with memory (no Rube)
+    financialRubeAgent,     // Financial agent with Rube (static tools via top-level await)
+    financialRubeDynamicAgent  // Financial agent for dynamic Rube toolsets
+  },
   storage: new LibSQLStore({
-    // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
     url: ":memory:",
   }),
   logger: new PinoLogger({

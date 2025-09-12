@@ -1,5 +1,10 @@
 import { MCPClient } from '@mastra/mcp';
 
+// Diagnostics (no secrets):
+console.log('[Boot] Rube MCP client init');
+console.log('[Boot] env.RUBE_MCP_URL present?', Boolean(process.env.RUBE_MCP_URL));
+console.log('[Boot] env.RUBE_MCP_TOKEN length:', process.env.RUBE_MCP_TOKEN ? String(process.env.RUBE_MCP_TOKEN).length : 0);
+
 /**
  * Rube MCP Client configuration.
  * Expect the following environment variables:
